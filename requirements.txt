@@ -1,0 +1,4 @@
+dmr-kaitai>=0.4
+uvloop
+asyncio
+git+git://github.com/OK-DMR/Hytera_Homebrew_Bridge@develop#egg=hytera-homebrew-bridge
