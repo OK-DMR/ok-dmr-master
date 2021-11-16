@@ -3,8 +3,9 @@ from typing import Tuple, Optional
 
 from okdmr.kaitai.homebrew.mmdvm2020 import Mmdvm2020
 
-from okdmr.master.protocols.mmdvm2020_pdu import mmdvm2020_ack_with_challenge, mmdvm2020_ack, mmdvm2020_pong
 from okdmr.master.utils import prettyprint
+from okdmr.protocols.mmdvm2020.pdu import mmdvm2020_ack_with_challenge, mmdvm2020_ack, mmdvm2020_pong, \
+    mmdvm2020_negative_ack
 
 
 class MMDVM2020Peer:
@@ -56,8 +57,11 @@ class MMDVM2020Peer:
         self.state = self.STATE_CLOSED
 
     def process_repeater_ping(self, message: Mmdvm2020.TypeRepeaterPing):
-        if self.state == self.STATE_AUTHORIZED:
-            return mmdvm2020_pong(repeater_id=self.repeater_id)
+        return (
+            mmdvm2020_pong(repeater_id=self.repeater_id)
+            if self.state == self.STATE_AUTHORIZED else
+            mmdvm2020_negative_ack(repeater_id=self.repeater_id)
+        )
 
     def process_datagram(self, datagram: Mmdvm2020, log_tag: str = "") -> Optional[bytes]:
         command_data = datagram.command_data

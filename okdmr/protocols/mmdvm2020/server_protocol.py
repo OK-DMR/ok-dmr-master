@@ -1,19 +1,21 @@
-import traceback
 import random
 import string
+import traceback
 from asyncio import protocols, transports
 from typing import Optional, Tuple, Dict
 
+from hytera_homebrew_bridge.dmrlib.transmission_watcher import TransmissionWatcher
 from okdmr.kaitai.homebrew.mmdvm2020 import Mmdvm2020
 
-from okdmr.master.protocols.mmdvm2020_peer import MMDVM2020Peer
 from okdmr.master.utils import prettyprint
+from okdmr.protocols.mmdvm2020.peer import MMDVM2020Peer
 
 
 class Mmdvm2020ServerProtocol(protocols.DatagramProtocol):
     def __init__(self):
         self.peers: Dict[int, MMDVM2020Peer] = {}
         self.transport: Optional[transports.DatagramTransport] = None
+        self.watcher: TransmissionWatcher = TransmissionWatcher()
 
     def get_peer(
             self,
@@ -64,9 +66,10 @@ class Mmdvm2020ServerProtocol(protocols.DatagramProtocol):
             addr: Tuple[str, int]
     ) -> None:
         dgram_id: str = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
-        received, repeater_id = self.parse_mmdvm2020_data(data)
-        if not received or not repeater_id:
+        parse: Optional[Tuple[Mmdvm2020, int]] = self.parse_mmdvm2020_data(data)
+        if not parse:
             return
+        received, repeater_id = parse
 
         # Check peer information
         peer: Optional[MMDVM2020Peer] = self.get_peer(repeater_id=repeater_id, address=addr, create_if_not_exists=True)
@@ -74,7 +77,9 @@ class Mmdvm2020ServerProtocol(protocols.DatagramProtocol):
             print(f"{dgram_id} Could not get peer {repeater_id} for {addr}")
             return
 
-        response: Optional[bytes] = peer.process_datagram(datagram=received, log_tag=dgram_id+" ")
+        response: Optional[bytes] = peer.process_datagram(datagram=received, log_tag=dgram_id + " ")
+        if isinstance(received.command_data, Mmdvm2020.TypeDmrData):
+            self.watcher.process_mmdvm(parsed=received)
         if response:
             check: Optional[Tuple[Mmdvm2020, int]] = self.parse_mmdvm2020_data(response)
             if check:

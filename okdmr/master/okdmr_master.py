@@ -1,10 +1,9 @@
 import asyncio
 import importlib.util
+from asyncio import AbstractEventLoop
 from typing import Optional
 
-from asyncio import AbstractEventLoop
-
-from okdmr.master.protocols.mmdvm2020_server_protocol import Mmdvm2020ServerProtocol
+from okdmr.protocols.mmdvm2020.server_protocol import Mmdvm2020ServerProtocol
 
 
 class OkdmrMaster:
@@ -32,4 +31,3 @@ if __name__ == "__main__":
 
     loop.run_until_complete(master.start())
     loop.run_forever()
-
