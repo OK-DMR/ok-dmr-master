@@ -13,8 +13,7 @@ class OkdmrMaster:
     async def start(self):
         self.loop = asyncio.get_running_loop()
         await self.loop.create_datagram_endpoint(
-            lambda: Mmdvm2020ServerProtocol(),
-            local_addr=("0.0.0.0", 62031)
+            lambda: Mmdvm2020ServerProtocol(), local_addr=("0.0.0.0", 62031)
         )
 
 
