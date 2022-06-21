@@ -3,7 +3,7 @@ import importlib.util
 from asyncio import AbstractEventLoop
 from typing import Optional
 
-from okdmr.protocols.mmdvm2020.server_protocol import Mmdvm2020ServerProtocol
+from okdmr.master.protocols.mmdvm2020.server_protocol import Mmdvm2020ServerProtocol
 
 
 class OkdmrMaster:

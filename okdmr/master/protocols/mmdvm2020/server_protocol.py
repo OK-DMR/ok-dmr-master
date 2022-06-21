@@ -4,11 +4,12 @@ import traceback
 from asyncio import protocols, transports
 from typing import Optional, Tuple, Dict
 
-from hytera_homebrew_bridge.dmrlib.transmission_watcher import TransmissionWatcher
+from okdmr.dmrlib.etsi.layer2.burst import Burst
 from okdmr.kaitai.homebrew.mmdvm2020 import Mmdvm2020
 
 from okdmr.master.utils import prettyprint
-from okdmr.protocols.mmdvm2020.peer import MMDVM2020Peer
+from okdmr.master.protocols.mmdvm2020.peer import MMDVM2020Peer
+from okdmr.dmrlib.transmission.transmission_watcher import TransmissionWatcher
 
 
 class Mmdvm2020ServerProtocol(protocols.DatagramProtocol):
@@ -55,6 +56,7 @@ class Mmdvm2020ServerProtocol(protocols.DatagramProtocol):
 
     @staticmethod
     def parse_mmdvm2020_data(packet: bytes) -> Optional[Tuple[Mmdvm2020, int]]:
+        # noinspection PyBroadException
         try:
             received: Mmdvm2020 = Mmdvm2020.from_bytes(packet)
             repeater_id: int = Mmdvm2020ServerProtocol.get_repeater_id(received)
@@ -85,7 +87,7 @@ class Mmdvm2020ServerProtocol(protocols.DatagramProtocol):
             datagram=received, log_tag=dgram_id + " "
         )
         if isinstance(received.command_data, Mmdvm2020.TypeDmrData):
-            self.watcher.process_mmdvm(parsed=received)
+            self.watcher.process_burst(Burst.from_mmdvm(mmdvm=received.command_data))
         if response:
             check: Optional[Tuple[Mmdvm2020, int]] = self.parse_mmdvm2020_data(response)
             if check:
