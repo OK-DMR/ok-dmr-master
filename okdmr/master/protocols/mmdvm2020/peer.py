@@ -3,13 +3,13 @@ from typing import Tuple, Optional
 
 from okdmr.kaitai.homebrew.mmdvm2020 import Mmdvm2020
 
-from okdmr.master.utils import prettyprint
 from okdmr.master.protocols.mmdvm2020.pdu import (
     mmdvm2020_ack_with_challenge,
     mmdvm2020_ack,
     mmdvm2020_pong,
     mmdvm2020_negative_ack,
 )
+from okdmr.master.utils import prettyprint
 
 
 class MMDVM2020Peer:
@@ -29,6 +29,7 @@ class MMDVM2020Peer:
         self.last_configuration: Optional[Mmdvm2020.TypeRepeaterConfiguration] = None
         self.state: int = self.STATE_NEW
         self.login_challenge: bytes = secrets.token_bytes(4)
+        self.last_receive_from: Tuple[str, int] = ("", 0)
 
     def check_origin(self, address: Tuple[str, int], throw: bool = False):
         """
@@ -76,8 +77,9 @@ class MMDVM2020Peer:
         )
 
     def process_datagram(
-        self, datagram: Mmdvm2020, log_tag: str = ""
+        self, datagram: Mmdvm2020, addr_from: Tuple[str, int], log_tag: str = ""
     ) -> Optional[bytes]:
+        self.last_receive_from = addr_from
         command_data = datagram.command_data
         print(
             f"{log_tag}Peer {self.repeater_id} sent {command_data.__class__.__name__} from {self.address}"

@@ -83,8 +83,14 @@ class Mmdvm2020ServerProtocol(protocols.DatagramProtocol):
             print(f"{dgram_id} Could not get peer {repeater_id} for {addr}")
             return
 
+        if isinstance(received.command_data, Mmdvm2020.TypeDmrData):
+            # repeat to all connected peers
+            for known_peer_id, peer in self.peers.items():
+                # DMRD packets can be relayed without modifications
+                self.transport.sendto(data=data, addr=peer.last_receive_from)
+
         response: Optional[bytes] = peer.process_datagram(
-            datagram=received, log_tag=dgram_id + " "
+            datagram=received, log_tag=dgram_id + " ", addr_from=addr
         )
         if isinstance(received.command_data, Mmdvm2020.TypeDmrData):
             self.watcher.process_burst(Burst.from_mmdvm(mmdvm=received.command_data))
